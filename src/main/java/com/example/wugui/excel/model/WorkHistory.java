@@ -1,4 +1,4 @@
-package com.example.wugui.model;
+package com.example.wugui.excel.model;
 
 import lombok.Data;
 
