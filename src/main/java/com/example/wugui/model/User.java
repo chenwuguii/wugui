@@ -1,11 +1,18 @@
 package com.example.wugui.model;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.write.handler.SheetWriteHandler;
+import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
+import com.alibaba.excel.write.metadata.holder.WriteWorkbookHolder;
 import lombok.Data;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
+import org.apache.poi.ss.util.CellRangeAddressList;
 
 /**
  * @author czy
- * @date 2020/12/21 14:30
+ * @date 2020/12/21 15:13
  */
 @Data
 public class User {
