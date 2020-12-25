@@ -17,10 +17,12 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author czy
+ */
 @Service
 @Slf4j
 public class AlipayServiceImpl implements AlipayService {
-
 
     /**
      * 调取支付宝接口 web端支付
@@ -96,9 +98,6 @@ public class AlipayServiceImpl implements AlipayService {
         bizContentMap.put("refund_amount", refundAmount);
         bizContentMap.put("refund_reason", refundReason);
         bizContentMap.put("out_request_no", outRequestNo);
-//        alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"refund_amount\":\"" + refundAmount
-//                + "\"," + "\"refund_reason\":\"" + refundReason + "\"," + "\"out_request_no\":\"" + outRequestNo
-//                + "\"}");
         alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
         AlipayTradeRefundResponse response = alipayClient.execute(alipayRequest);
         if (response.isSuccess()) {
