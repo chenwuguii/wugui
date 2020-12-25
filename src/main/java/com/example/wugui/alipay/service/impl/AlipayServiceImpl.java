@@ -7,6 +7,7 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.domain.AlipayTradeWapPayModel;
 import com.alipay.api.request.*;
+import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.example.wugui.alipay.config.AlipayConfig;
 import com.example.wugui.alipay.service.AlipayService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,10 @@ public class AlipayServiceImpl implements AlipayService {
 
     /**
      * web端订单支付
+     * <p>
+     * subject：必填，商品的标题/交易标题/订单标题/订单关键字等。 不可使用特殊字符，如 /,=,& 等。
+     * product_code：必填，销售产品码，与支付宝签约的产品码名称。目前电脑支付场景下仅支持 FAST_INSTANT_TRADE_PAY。
+     * total_amount：必填，订单总金额，单位为元，精确到小数点后两位，取值范围为 [0.01,100000000]。金额不能为0。
      *
      * @param outTradeNo  订单编号（唯一）
      * @param totalAmount 订单价格
@@ -69,6 +74,13 @@ public class AlipayServiceImpl implements AlipayService {
 
     /**
      * 退款
+     * <p>
+     * 当交易发生之后一段时间内，由于买家或者卖家的原因需要退款时，卖家可以通过退款接口将支付款退还给买家，支付宝将在收到退款请求并且验证成功之后，按照退款规则将支付款按原路退回到买家账号上。
+     * 交易超过约定时间（签约时设置的可退款时间）的订单无法进行退款。
+     * 支付宝退款支持单笔交易分多次退款，多次退款需要提交原支付订单的商户订单号和设置不同的退款单号。
+     * 一笔退款失败后重新提交，要采用原来的退款单号。
+     * 总退款金额不能超过用户实际支付金额。
+     * 退款信息以退款接口同步返回或者退款查询接口 alipay.trade.fastpay.refund.query 为准。
      *
      * @param outTradeNo   订单编号
      * @param refundReason 退款原因
@@ -76,14 +88,24 @@ public class AlipayServiceImpl implements AlipayService {
      * @param outRequestNo 标识一次退款请求，同一笔交易多次退款需要保证唯一，如需部分退款，则此参数必传
      */
     @Override
-    public String refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo)
+    public void refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo)
             throws AlipayApiException {
         AlipayTradeRefundRequest alipayRequest = new AlipayTradeRefundRequest();
-
-        alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"refund_amount\":\"" + refundAmount
-                + "\"," + "\"refund_reason\":\"" + refundReason + "\"," + "\"out_request_no\":\"" + outRequestNo
-                + "\"}");
-        return alipayClient.execute(alipayRequest).getBody();
+        Map<String, Object> bizContentMap = new HashMap<>(8);
+        bizContentMap.put("out_trade_no", outTradeNo);
+        bizContentMap.put("refund_amount", refundReason);
+        bizContentMap.put("refund_reason", refundAmount);
+        bizContentMap.put("out_request_no", outRequestNo);
+//        alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"refund_amount\":\"" + refundAmount
+//                + "\"," + "\"refund_reason\":\"" + refundReason + "\"," + "\"out_request_no\":\"" + outRequestNo
+//                + "\"}");
+        alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
+        AlipayTradeRefundResponse response = alipayClient.execute(alipayRequest);
+        if (response.isSuccess()) {
+            log.info("退款接口调用成功，返回结果" + response.getBody());
+        } else {
+            log.info("退款接口调用失败，返回结果 " + response.getBody());
+        }
     }
 
     /**

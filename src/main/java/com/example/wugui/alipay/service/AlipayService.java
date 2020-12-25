@@ -36,9 +36,9 @@ public interface AlipayService {
      * @param refundReason 退款原因
      * @param refundAmount 退款金额
      * @param outRequestNo 标识一次退款请求，同一笔交易多次退款需要保证唯一，如需部分退款，则此参数必传
+     * @throws AlipayApiException 支付接口异常
      */
-    String refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo)
-            throws AlipayApiException;
+    void refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo) throws AlipayApiException;
 
     /**
      * 交易查询

@@ -25,7 +25,7 @@ public class AlipayController {
     public void webPagePay(HttpServletResponse response) {
         // 模拟从数据库查询商品
         String outTradeNo = UUID.randomUUID().toString().replace("-", "");
-        double totalAmount = 1.58;
+        double totalAmount = 100.00;
         String subject = "商品名称";
         try {
             String form = alipayService.webPagePay(outTradeNo, totalAmount, subject);
@@ -44,17 +44,9 @@ public class AlipayController {
     @GetMapping("/refund")
     public void refund(HttpServletResponse response) {
         // 模拟从数据库查询商品
-        String outTradeNo = UUID.randomUUID().toString().replace("-", "");
         double totalAmount = 1.58;
         try {
-            String form = alipayService.refund("1afab9e03d7840abb15299b6c9c47c69", "客户不想要了", 1.00, "1");
-            if (StringUtils.isNotBlank(form)) {
-                // 渲染form表单到页面
-                response.setContentType("text/html;charset=" + AlipayConfig.CHARSET);
-                response.getWriter().write(form);
-                response.getWriter().flush();
-                response.getWriter().close();
-            }
+            alipayService.refund("32649c53bc7d4ced8c87b48514e50890", "客户不想要了", 1, "1");
         } catch (Exception e) {
             e.printStackTrace();
         }
