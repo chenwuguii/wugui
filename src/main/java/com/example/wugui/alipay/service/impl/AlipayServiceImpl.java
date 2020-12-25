@@ -84,26 +84,28 @@ public class AlipayServiceImpl implements AlipayService {
      * 总退款金额不能超过用户实际支付金额。
      * 退款信息以退款接口同步返回或者退款查询接口 alipay.trade.fastpay.refund.query 为准。
      *
-     * @param outTradeNo   订单编号
+     * @param outTradeNo   订单编号  (必填)
      * @param refundReason 退款原因
-     * @param refundAmount 退款金额
+     * @param refundAmount 退款金额  (必填)
      * @param outRequestNo 标识一次退款请求，同一笔交易多次退款需要保证唯一，如需部分退款，则此参数必传
      */
     @Override
     public void refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo)
             throws AlipayApiException {
-        AlipayTradeRefundRequest alipayRequest = new AlipayTradeRefundRequest();
-        Map<String, Object> bizContentMap = new HashMap<>(8);
-        bizContentMap.put("out_trade_no", outTradeNo);
-        bizContentMap.put("refund_amount", refundAmount);
-        bizContentMap.put("refund_reason", refundReason);
-        bizContentMap.put("out_request_no", outRequestNo);
-        alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
-        AlipayTradeRefundResponse response = alipayClient.execute(alipayRequest);
-        if (response.isSuccess()) {
-            log.info("退款接口调用成功，返回结果" + response.getBody());
-        } else {
-            log.info("退款接口调用失败，返回结果 " + response.getBody());
+        if (StringUtils.isNotBlank(outRequestNo) && refundAmount != 0) {
+            AlipayTradeRefundRequest alipayRequest = new AlipayTradeRefundRequest();
+            Map<String, Object> bizContentMap = new HashMap<>(8);
+            bizContentMap.put("out_trade_no", outTradeNo);
+            bizContentMap.put("refund_amount", refundAmount);
+            bizContentMap.put("refund_reason", refundReason);
+            bizContentMap.put("out_request_no", outRequestNo);
+            alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
+            AlipayTradeRefundResponse response = alipayClient.execute(alipayRequest);
+            if (response.isSuccess()) {
+                log.info("退款接口调用成功，返回结果" + response.getBody());
+            } else {
+                log.info("退款接口调用失败，返回结果 " + response.getBody());
+            }
         }
     }
 
