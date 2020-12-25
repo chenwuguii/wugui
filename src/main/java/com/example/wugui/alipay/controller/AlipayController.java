@@ -43,8 +43,6 @@ public class AlipayController {
 
     @GetMapping("/refund")
     public void refund(HttpServletResponse response) {
-        // 模拟从数据库查询商品
-        double totalAmount = 1.58;
         try {
             alipayService.refund("32649c53bc7d4ced8c87b48514e50890", "客户不想要了", 1, "1");
         } catch (Exception e) {

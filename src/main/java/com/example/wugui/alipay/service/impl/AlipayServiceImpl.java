@@ -93,8 +93,8 @@ public class AlipayServiceImpl implements AlipayService {
         AlipayTradeRefundRequest alipayRequest = new AlipayTradeRefundRequest();
         Map<String, Object> bizContentMap = new HashMap<>(8);
         bizContentMap.put("out_trade_no", outTradeNo);
-        bizContentMap.put("refund_amount", refundReason);
-        bizContentMap.put("refund_reason", refundAmount);
+        bizContentMap.put("refund_amount", refundAmount);
+        bizContentMap.put("refund_reason", refundReason);
         bizContentMap.put("out_request_no", outRequestNo);
 //        alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"refund_amount\":\"" + refundAmount
 //                + "\"," + "\"refund_reason\":\"" + refundReason + "\"," + "\"out_request_no\":\"" + outRequestNo
