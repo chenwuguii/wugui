@@ -7,6 +7,8 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.domain.AlipayTradeWapPayModel;
 import com.alipay.api.request.*;
+import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
+import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.example.wugui.alipay.config.AlipayConfig;
 import com.example.wugui.alipay.service.AlipayService;
@@ -50,7 +52,7 @@ public class AlipayServiceImpl implements AlipayService {
      * @param subject     商品名称
      */
     @Override
-    public String webPagePay(String outTradeNo, double totalAmount, String subject) throws Exception {
+    public String webPagePay(String outTradeNo, double totalAmount, String subject) throws AlipayApiException {
         if (StringUtils.isNotBlank(outTradeNo) && totalAmount != 0 && StringUtils.isNotBlank(subject)) {
             log.info("调用支付宝下单接口--订单编号：" + outTradeNo + " 订单金额：" + totalAmount + " 商品名称：" + subject);
             AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
@@ -67,61 +69,67 @@ public class AlipayServiceImpl implements AlipayService {
             bizContentMap.put("subject", subject);
             bizContentMap.put("timeout_express", "90m");
             bizContentMap.put("product_code", "FAST_INSTANT_TRADE_PAY");
+            log.info("调用支付宝统一收单下单并支付页面接口，发送参数：" + bizContentMap);
             alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
             // 返回form表单
-            return alipayClient.pageExecute(alipayRequest).getBody();
+            String form = alipayClient.pageExecute(alipayRequest).getBody();
+            log.info("调用支付宝统一收单下单并支付页面接口，返回结果：" + form);
+            return form;
         }
         return "";
     }
 
-    /**
-     * 退款
-     * <p>
-     * 当交易发生之后一段时间内，由于买家或者卖家的原因需要退款时，卖家可以通过退款接口将支付款退还给买家，支付宝将在收到退款请求并且验证成功之后，按照退款规则将支付款按原路退回到买家账号上。
-     * 交易超过约定时间（签约时设置的可退款时间）的订单无法进行退款。
-     * 支付宝退款支持单笔交易分多次退款，多次退款需要提交原支付订单的商户订单号和设置不同的退款单号。
-     * 一笔退款失败后重新提交，要采用原来的退款单号。
-     * 总退款金额不能超过用户实际支付金额。
-     * 退款信息以退款接口同步返回或者退款查询接口 alipay.trade.fastpay.refund.query 为准。
-     *
-     * @param outTradeNo   订单编号  (必填)
-     * @param refundReason 退款原因
-     * @param refundAmount 退款金额  (必填)
-     * @param outRequestNo 标识一次退款请求，同一笔交易多次退款需要保证唯一，如需部分退款，则此参数必传
-     */
     @Override
-    public void refund(String outTradeNo, String refundReason, double refundAmount, String outRequestNo)
+    public void refund(String outTradeNo, double refundAmount, String outRequestNo)
             throws AlipayApiException {
-        if (StringUtils.isNotBlank(outRequestNo) && refundAmount != 0) {
+        if (StringUtils.isNotBlank(outTradeNo) && refundAmount != 0) {
             AlipayTradeRefundRequest alipayRequest = new AlipayTradeRefundRequest();
             Map<String, Object> bizContentMap = new HashMap<>(8);
             bizContentMap.put("out_trade_no", outTradeNo);
             bizContentMap.put("refund_amount", refundAmount);
-            bizContentMap.put("refund_reason", refundReason);
             bizContentMap.put("out_request_no", outRequestNo);
             alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
+            log.info("调用支付宝退款 alipay.trade.refund 接口，发送参数：" + bizContentMap);
             AlipayTradeRefundResponse response = alipayClient.execute(alipayRequest);
             if (response.isSuccess()) {
-                log.info("退款接口调用成功，返回结果" + response.getBody());
+                log.info("调用支付宝统一收单交易退款接口成功，返回结果：" + response.getBody());
             } else {
-                log.info("退款接口调用失败，返回结果 " + response.getBody());
+                log.info("调用支付宝统一收单交易退款接口失败，返回结果：" + response.getBody());
             }
         }
     }
 
-    /**
-     * 交易查询
-     *
-     * @param outTradeNo 订单编号（唯一）
-     */
     @Override
-    public String query(String outTradeNo) throws AlipayApiException {
+    public void payQuery(String outTradeNo) throws AlipayApiException {
         AlipayTradeQueryRequest alipayRequest = new AlipayTradeQueryRequest();
-        /** 请求接口 */
-        alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"trade_no\":\"" + "" + "\"}");
-        /** 转换格式 */
-        String result = alipayClient.execute(alipayRequest).getBody();
-        return result;
+        Map<String, Object> bizContentMap = new HashMap<>(8);
+        bizContentMap.put("out_trade_no", outTradeNo);
+        alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
+        log.info("调用支付宝统一收单线下交易查询，发送参数：" + bizContentMap);
+        AlipayTradeQueryResponse response = alipayClient.execute(alipayRequest);
+        if (response.isSuccess()) {
+            log.info("调用支付宝统一收单线下交易查询接口成功，返回结果：" + response.getBody());
+        } else {
+            log.info("调用支付宝统一收单线下交易查询接口失败，返回结果：" + response.getBody());
+        }
+    }
+
+    @Override
+    public void refundQuery(String outTradeNo, String outRequestNo) throws AlipayApiException {
+        if (StringUtils.isNotBlank(outTradeNo) && StringUtils.isNotBlank(outRequestNo)) {
+            AlipayTradeFastpayRefundQueryRequest alipayRequest = new AlipayTradeFastpayRefundQueryRequest();
+            Map<String, Object> bizContentMap = new HashMap<>(8);
+            bizContentMap.put("out_trade_no", outTradeNo);
+            bizContentMap.put("out_request_no", outRequestNo);
+            alipayRequest.setBizContent(JSON.toJSONString(bizContentMap));
+            log.info("调用支付宝统一收单交易退款查询接口，发送参数：" + bizContentMap);
+            AlipayTradeFastpayRefundQueryResponse response = alipayClient.execute(alipayRequest);
+            if (response.isSuccess()) {
+                log.info("调用支付宝统一收单交易退款查询接口成功，返回结果：" + response.getBody());
+            } else {
+                log.info("调用支付宝统一收单交易退款查询接口失败，返回结果：" + response.getBody());
+            }
+        }
     }
 
     /**
@@ -130,34 +138,13 @@ public class AlipayServiceImpl implements AlipayService {
      * @param outTradeNo 订单编号（唯一）
      */
     @Override
-    public String close(String outTradeNo) throws AlipayApiException {
+    public void close(String outTradeNo) throws AlipayApiException {
         AlipayTradeCloseRequest alipayRequest = new AlipayTradeCloseRequest();
 
         alipayRequest.setBizContent("{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"trade_no\":\"" + "" + "\"}");
 
         String result = alipayClient.execute(alipayRequest).getBody();
 
-        return result;
-    }
-
-    /**
-     * 退款查询
-     *
-     * @param outTradeNo   订单编号（唯一）
-     * @param outRequestNo 标识一次退款请求，同一笔交易多次退款需要保证唯一，如需部分退款，则此参数必传
-     */
-    @Override
-    public String refundQuery(String outTradeNo, String outRequestNo) throws AlipayApiException {
-        AlipayTradeFastpayRefundQueryRequest alipayRequest = new AlipayTradeFastpayRefundQueryRequest();
-
-        /** 请求接口 */
-        alipayRequest.setBizContent(
-                "{\"out_trade_no\":\"" + outTradeNo + "\"," + "\"out_request_no\":\"" + outRequestNo + "\"}");
-
-        /** 格式转换 */
-        String result = alipayClient.execute(alipayRequest).getBody();
-
-        return result;
     }
 
     /**
@@ -168,7 +155,7 @@ public class AlipayServiceImpl implements AlipayService {
      * @param subject     商品名称
      */
     @Override
-    public String appPagePay(String outTradeNo, Integer totalAmount, String subject) throws Exception {
+    public String appPagePay(String outTradeNo, Integer totalAmount, String subject) throws AlipayApiException {
         AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();
 
         /** 同步通知，支付完成后，支付成功页面 */

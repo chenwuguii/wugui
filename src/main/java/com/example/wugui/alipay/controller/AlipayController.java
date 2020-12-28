@@ -3,8 +3,9 @@ package com.example.wugui.alipay.controller;
 import com.example.wugui.alipay.config.AlipayConfig;
 import com.example.wugui.alipay.service.AlipayService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -15,7 +16,8 @@ import java.util.UUID;
  *
  * @author czy
  */
-@Controller
+@RestController()
+@RequestMapping("/alipay")
 public class AlipayController {
 
     @Resource
@@ -42,9 +44,27 @@ public class AlipayController {
     }
 
     @GetMapping("/refund")
-    public void refund(HttpServletResponse response) {
+    public void refund() {
         try {
-            alipayService.refund("32649c53bc7d4ced8c87b48514e50890", "客户不想要了", 1, "1");
+            alipayService.refund("58f885c3aca2417fb378b5fffbc87e66", 100.00, "");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping("/payQuery")
+    public void payQuery() {
+        try {
+            alipayService.payQuery("c0482e1ee7fd45b49fc5d4183f138087");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping("/refundQuery")
+    public void refundQuery() {
+        try {
+            alipayService.refundQuery("c0482e1ee7fd45b49fc5d4183f138087","2020122822001453880503160577");
         } catch (Exception e) {
             e.printStackTrace();
         }
